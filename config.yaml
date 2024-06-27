@@ -1,0 +1,19 @@
+# cpu:6 mem:10GB storage:50GB
+---
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: k8-homelab
+# disabling default CNI plugin (kindnet) and enable calico
+networking:
+  disableDefaultCNI: true
+  podSubnet: 192.168.0.0/16
+nodes:
+  - role: control-plane
+    labels:
+      role: control-plane-node
+  - role: worker
+    labels:
+      role: worker-node-01
+  - role: worker
+    labels:
+      role: worker-node-02
