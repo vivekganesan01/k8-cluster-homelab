@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      serviceAccountName: vault
+      containers:
+        - name: app
+          image: hashieducation/simple-vault-client:latest
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "256Mi"
+              cpu: "100m"
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+          env:
+            - name: VAULT_ADDR
+              value: "http://vault:8200"
+            - name: JWT_PATH
+              value: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            - name: SERVICE_PORT
+              value: "8080"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-svc
+  labels:
+    app: webapp-svc
+spec:
+  selector:
+    app: webapp
+  ports:
+    - protocol: "TCP"
+      port: 9090 # port which service listen on - other apps can reach this service via this port
+      targetPort: 8080 # port on which container listen on
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-svc-ingress
+  labels:
+    app: webapp-svc-ingress
+spec:
+  ingressClassName: "nginx"
+  rules:
+    - host: "vault.homelabdevops.hack"
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: webapp-svc
+                port:
+                  number: 9090

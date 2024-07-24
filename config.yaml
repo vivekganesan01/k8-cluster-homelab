@@ -3,12 +3,29 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 name: k8-homelab
+containerdConfigPatches:
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = "/etc/containerd/certs.d"
 # disabling default CNI plugin (kindnet) and enable calico
 networking:
   disableDefaultCNI: true
-  podSubnet: 192.168.0.0/16
+  podSubnet: 192.168.0.0/16 # for calico to work
 nodes:
   - role: control-plane
+    kubeadmConfigPatches: # for ingress controller nginx
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
     labels:
       role: control-plane-node
   - role: worker
