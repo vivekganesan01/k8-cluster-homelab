@@ -1,2 +1,5 @@
 
 .vscode/settings.json
+kube-redis-stack/*.pem
+kube-redis-stack/*.csr
+kube-redis-stack/*.srl
