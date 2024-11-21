@@ -1,0 +1,28 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: sandbox-insights-postgresql
+spec:
+  description: "Standard IBM PG Cluster"
+  instances: 3
+  imageName: ghcr.io/cloudnative-pg/postgresql:14.5
+  enableSuperuserAccess: true
+  primaryUpdateStrategy: unsupervised
+  postgresql:
+    pg_hba:
+      - host all all 0.0.0.0/0 md5
+  bootstrap:
+    initdb:
+      database: app
+  affinity:
+    nodeSelector:
+      workload: datastore
+  resources:
+    requests:
+      memory: "1024Mi"
+      cpu: 1
+    limits:
+      memory: "1024Mi"
+      cpu: 1
+  storage:
+    size: 8Gi
