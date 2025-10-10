@@ -13,8 +13,6 @@ data:
         listenAddr: ":8480"
       grpc:
         listenAddr: ":8401"
-    storageDataPath: /victoria-logs-data
-    retentionPeriod: 30d
     memory:
       allowedPercent: 80
     loggerLevel: INFO
@@ -27,7 +25,6 @@ data:
     server:
       http:
         listenAddr: ":8481"
-    storageDataPath: /victoria-logs-data
     memory:
       allowedPercent: 80
     loggerLevel: INFO
@@ -131,8 +128,11 @@ spec:
       - name: vminsert
         image: victoriametrics/vminsert:latest
         args:
-          - "-config=/etc/victoriametrics/vminsert.yaml"
+          - "-httpListenAddr=:8480"
+          - "-grpcListenAddr=:8401"
           - "-storageNode=victoria-logs-vmstorage.observability.svc.cluster.local:8400"
+          - "-memory.allowedPercent=80"
+          - "-loggerLevel=INFO"
         ports:
         - containerPort: 8480
           name: http
@@ -141,8 +141,6 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /etc/victoriametrics
-        - name: data
-          mountPath: /victoria-logs-data
         resources:
           requests:
             memory: "256Mi"
@@ -154,8 +152,6 @@ spec:
       - name: config
         configMap:
           name: victoria-logs-config
-      - name: data
-        emptyDir: {}
 
 ---
 apiVersion: v1
@@ -197,16 +193,16 @@ spec:
       - name: vmselect
         image: victoriametrics/vmselect:latest
         args:
-          - "-config=/etc/victoriametrics/vmselect.yaml"
+          - "-httpListenAddr=:8481"
           - "-storageNode=victoria-logs-vmstorage.observability.svc.cluster.local:8400"
+          - "-memory.allowedPercent=80"
+          - "-loggerLevel=INFO"
         ports:
         - containerPort: 8481
           name: http
         volumeMounts:
         - name: config
           mountPath: /etc/victoriametrics
-        - name: data
-          mountPath: /victoria-logs-data
         resources:
           requests:
             memory: "256Mi"
@@ -218,8 +214,6 @@ spec:
       - name: config
         configMap:
           name: victoria-logs-config
-      - name: data
-        emptyDir: {}
 
 ---
 apiVersion: v1
