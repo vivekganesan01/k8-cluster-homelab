@@ -11,8 +11,6 @@ data:
     server:
       http:
         listenAddr: ":8480"
-      grpc:
-        listenAddr: ":8401"
     memory:
       allowedPercent: 80
     loggerLevel: INFO
@@ -129,15 +127,12 @@ spec:
         image: victoriametrics/vminsert:latest
         args:
           - "-httpListenAddr=:8480"
-          - "-grpcListenAddr=:8401"
           - "-storageNode=victoria-logs-vmstorage.observability.svc.cluster.local:8400"
           - "-memory.allowedPercent=80"
           - "-loggerLevel=INFO"
         ports:
         - containerPort: 8480
           name: http
-        - containerPort: 8401
-          name: grpc
         volumeMounts:
         - name: config
           mountPath: /etc/victoriametrics
@@ -166,9 +161,6 @@ spec:
   - port: 8480
     targetPort: 8480
     name: http
-  - port: 8401
-    targetPort: 8401
-    name: grpc
   type: ClusterIP
 
 ---
