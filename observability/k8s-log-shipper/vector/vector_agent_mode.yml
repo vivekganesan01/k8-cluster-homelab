@@ -76,7 +76,6 @@ customConfig:
   
   # Sources - collect logs from Kubernetes
   sources:
-    # Collect Kubernetes container logs
     kubernetes_logs:
       type: kubernetes_logs
       annotation_fields:
@@ -89,35 +88,22 @@ customConfig:
   
   # Transforms - process and enrich logs
   transforms:
-    # Parse JSON logs if they exist
-    parse_json:
-      type: remap
-      inputs: [kubernetes_logs]
-      source: |
-        # Try to parse JSON from message field, fallback to original if not JSON
-        if is_string(.message) {
-          parsed, err = parse_json(.message)
-          if err == null {
-            . = merge(., parsed)
-          }
-        }
-    
     # Filter out Vector's own logs to prevent recursion
     filter_vector_logs:
       type: filter
-      inputs: [parse_json]
+      inputs: [kubernetes_logs]
       condition: '!starts_with!(.kubernetes.container_name, "vector")'
   
   # Sinks - send logs to Victoria Logs
   sinks:
-    # Send to Victoria Logs via HTTP
     victoria_logs:
       type: http
       inputs: [filter_vector_logs]
       uri: "http://victoria-logs-vminsert.observability.svc.cluster.local:8480/insert/0/loki/api/v1/push"
       method: post
-      headers:
-        Content-Type: "application/json"
+      request:
+        headers:
+          Content-Type: "application/json"
       batch:
         max_bytes: 1048576
         timeout_secs: 5
