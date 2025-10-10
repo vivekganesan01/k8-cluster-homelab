@@ -78,8 +78,8 @@ spec:
         volumeMounts:
           - name: data
             mountPath: /victoria-logs-data
-          - name: data
-            mountPath: /victoria-logs-data
+          - name: config
+            mountPath: /etc/victoriametrics
         resources:
           requests:
             memory: "256Mi"
