@@ -1,0 +1,186 @@
+# Victoria Logs Configuration for Kubernetes
+# basic configuration for Victoria Logs to receive logs from Vector
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: victoria-logs-config
+  namespace: observability
+data:
+  vminsert.yaml: |
+    # Victoria Logs VMInsert configuration
+    server:
+      http:
+        listenAddr: ":8480"
+      grpc:
+        listenAddr: ":8401"
+    
+    # Storage configuration
+    storageDataPath: /victoria-logs-data
+    
+    # Retention settings
+    retentionPeriod: 30d
+    
+    # Memory settings
+    memory:
+      allowedPercent: 80
+    
+    # Logging
+    loggerLevel: INFO
+    
+    # Clustering (for single node, keep simple)
+    clusterMembersCount: 1
+    
+    # HTTP settings
+    http:
+      maxRequestBodySize: 10485760  # 10MB
+      maxConcurrentRequests: 1000
+
+  vmselect.yaml: |
+    # Victoria Logs VMSelect configuration
+    server:
+      http:
+        listenAddr: ":8481"
+    
+    # Storage configuration
+    storageDataPath: /victoria-logs-data
+    
+    # Memory settings
+    memory:
+      allowedPercent: 80
+    
+    # Logging
+    loggerLevel: INFO
+    
+    # Cache settings
+    search:
+      maxQueryLen: 16384
+      maxConcurrentRequests: 10
+      maxMemoryPerQuery: 1073741824  # 1GB
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoria-logs-vminsert
+  namespace: observability
+  labels:
+    app: victoria-logs-vminsert
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victoria-logs-vminsert
+  template:
+    metadata:
+      labels:
+        app: victoria-logs-vminsert
+    spec:
+      containers:
+      - name: vminsert
+        image: victoriametrics/vminsert:latest
+        ports:
+        - containerPort: 8480
+          name: http
+        - containerPort: 8401
+          name: grpc
+        volumeMounts:
+        - name: config
+          mountPath: /etc/victoriametrics
+        - name: data
+          mountPath: /victoria-logs-data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: config
+        configMap:
+          name: victoria-logs-config
+      - name: data
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victoria-logs-vminsert
+  namespace: observability
+spec:
+  selector:
+    app: victoria-logs-vminsert
+  ports:
+  - port: 8480
+    targetPort: 8480
+    name: http
+  - port: 8401
+    targetPort: 8401
+    name: grpc
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoria-logs-vmselect
+  namespace: observability
+  labels:
+    app: victoria-logs-vmselect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victoria-logs-vmselect
+  template:
+    metadata:
+      labels:
+        app: victoria-logs-vmselect
+    spec:
+      containers:
+      - name: vmselect
+        image: victoriametrics/vmselect:latest
+        ports:
+        - containerPort: 8481
+          name: http
+        volumeMounts:
+        - name: config
+          mountPath: /etc/victoriametrics
+        - name: data
+          mountPath: /victoria-logs-data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: config
+        configMap:
+          name: victoria-logs-config
+      - name: data
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victoria-logs-vmselect
+  namespace: observability
+spec:
+  selector:
+    app: victoria-logs-vmselect
+  ports:
+  - port: 8481
+    targetPort: 8481
+    name: http
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
