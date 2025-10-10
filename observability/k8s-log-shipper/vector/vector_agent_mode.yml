@@ -91,10 +91,16 @@ customConfig:
   transforms:
     # Parse JSON logs if they exist
     parse_json:
-      type: parse_json
+      type: remap
       inputs: [kubernetes_logs]
-      field: message
-      drop_invalid: false
+      source: |
+        # Try to parse JSON from message field, fallback to original if not JSON
+        if is_string(.message) {
+          parsed, err = parse_json(.message)
+          if err == null {
+            . = merge(., parsed)
+          }
+        }
     
     # Filter out Vector's own logs to prevent recursion
     filter_vector_logs:
