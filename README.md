@@ -7,8 +7,8 @@ A comprehensive guide for setting up a production-ready Kubernetes cluster using
 1. [Prerequisites](#prerequisites)
 2. [k0s Cluster Setup](#k0s-cluster-setup)
 3. [Container Runtime Tools](#container-runtime-tools)
-4. [ArgoCD Installation](#argocd-installation)
-5. [MetalLB Load Balancer](#metallb-load-balancer)
+4. [MetalLB Load Balancer](#metallb-load-balancer)
+5. [ArgoCD Installation](#argocd-installation)
 6. [Observability Stack](#observability-stack)
 7. [Roadmap](#Roadmap)
 
@@ -163,6 +163,15 @@ ETCDCTL_API=3 etcdctl \
   endpoint health
 ```
 
+## ⚖️ MetalLB Load Balancer
+
+MetalLB provides a network load-balancer implementation for Kubernetes clusters that don't run on a supported cloud platform.
+
+```bash
+# Install MetalLB
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
+```
+
 ## 🎯 ArgoCD Installation
 
 ArgoCD is a declarative, GitOps continuous delivery tool for Kubernetes.
@@ -173,15 +182,9 @@ kubectl create namespace argocd
 
 # Install ArgoCD
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-```
 
-## ⚖️ MetalLB Load Balancer
-
-MetalLB provides a network load-balancer implementation for Kubernetes clusters that don't run on a supported cloud platform.
-
-```bash
-# Install MetalLB
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
+# Enable Load balancer
+kubectl apply -f ./network/02_argocd_external_load_balancer.yml
 ```
 
 ## 📊 Observability Stack
@@ -199,6 +202,9 @@ helm repo update
 helm install prometheus-operator prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
   --create-namespace
+
+# Enable Load balancer
+kubectl apply -f ./network/03_grafana_external_load_balancer.yml
 ```
 
 ### Log Aggregation
@@ -206,6 +212,8 @@ helm install prometheus-operator prometheus-community/kube-prometheus-stack \
 The stack includes Vector for log collection and Victoria Logs for long-term storage:
 - **Vector**: High-performance observability data pipeline
 - **Victoria Logs**: Fast, resource-efficient, easier to setup
+
+*** Checkout argocd folder for vector and victoria_logs deployments ***
 
 ## 🔐 Security & Certificates
 
@@ -221,15 +229,26 @@ The stack includes Vector for log collection and Victoria Logs for long-term sto
 ```
 k8-cluster-homelab/
 ├── argocd/                    # ArgoCD configurations
+│   ├── 01_victoria_logs_rollout.yml
+│   └── 02_vector_agent_rollout.yml
 ├── k0sCluster/               # k0s cluster configurations
 │   └── k0s_singlenode_controller.yml
+├── network/                  # Network and load balancer configs
+│   ├── 01_metal_lb_advertiser.yml
+│   └── 03_grafana_external_load_balancer.yml
 ├── observability/            # Monitoring and logging
 │   ├── k8s-log-shipper/     # Log aggregation setup
-│   │   ├── vector.yml
-│   │   └── victoria_logs.yaml
+│   │   ├── victoriaLogs/
+│   │   │   └── victoria_logs.yml
+│   │   ├── vector/
+│   │   │   ├── vector_agent_mode.yml
+│   │   │   ├── vector_defaults.yml
+│   │   │   ├── script.sh
+│   │   │   └── checklist.md
+│   │   └── README.md
 │   └── k8s-monitoring/      # Monitoring stack
 │       └── script.sh
-├── gitignore.yml            # Git ignore configuration
+├── .gitignore               # Git ignore configuration
 └── README.md               # This file
 ```
 
