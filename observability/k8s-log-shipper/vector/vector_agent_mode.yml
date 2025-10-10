@@ -85,13 +85,7 @@ customConfig:
         pod_name: "kubernetes.pod_name"
         pod_namespace: "kubernetes.pod_namespace"
         pod_node_name: "kubernetes.pod_node_name"
-      label_fields:
-        app: "kubernetes.labels.app"
-        version: "kubernetes.labels.version"
-        component: "kubernetes.labels.component"
       auto_partial_merge: true
-      auto_partial_merge_fields: ["message"]
-      auto_partial_merge_max_fields: 50
       self_node_name: ${VECTOR_SELF_NODE_NAME}
   
   # Transforms - process and enrich logs
