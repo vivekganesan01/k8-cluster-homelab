@@ -203,9 +203,9 @@ helm install prometheus-operator prometheus-community/kube-prometheus-stack \
 
 ### Log Aggregation
 
-The stack includes Vector for log collection and Victoria Metrics for long-term storage:
+The stack includes Vector for log collection and Victoria Logs for long-term storage:
 - **Vector**: High-performance observability data pipeline
-- **Victoria Metrics**: Fast, cost-effective monitoring solution
+- **Victoria Logs**: Fast, resource-efficient, easier to setup
 
 ## 🔐 Security & Certificates
 
