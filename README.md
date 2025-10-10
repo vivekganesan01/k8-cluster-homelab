@@ -235,6 +235,7 @@ k8-cluster-homelab/
 │   └── k0s_singlenode_controller.yml
 ├── network/                  # Network and load balancer configs
 │   ├── 01_metal_lb_advertiser.yml
+|   ├── 02_argocd_external_load_balancer.yml
 │   └── 03_grafana_external_load_balancer.yml
 ├── observability/            # Monitoring and logging
 │   ├── k8s-log-shipper/     # Log aggregation setup

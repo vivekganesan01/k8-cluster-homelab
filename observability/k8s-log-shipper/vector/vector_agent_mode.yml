@@ -99,7 +99,7 @@ customConfig:
     victoria_logs:
       type: http
       inputs: [filter_vector_logs]
-      uri: "http://victoria-logs-vminsert.observability.svc.cluster.local:8480/insert/0/loki/api/v1/push"
+      uri: "http://victoria-logs-vminsert.observability.svc.cluster.local:8480/insert/jsonline"
       method: post
       request:
         headers:
