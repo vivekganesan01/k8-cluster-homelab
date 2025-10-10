@@ -79,7 +79,6 @@ customConfig:
     # Collect Kubernetes container logs
     kubernetes_logs:
       type: kubernetes_logs
-      namespace: ""
       annotation_fields:
         container_name: "kubernetes.container_name"
         pod_name: "kubernetes.pod_name"
