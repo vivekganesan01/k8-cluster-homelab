@@ -103,17 +103,10 @@ customConfig:
       field: message
       drop_invalid: false
     
-    # Add timestamp if missing
-    add_timestamp:
-      type: add_fields
-      inputs: [parse_json]
-      fields:
-        timestamp: "{{ now() }}"
-    
     # Filter out Vector's own logs to prevent recursion
     filter_vector_logs:
       type: filter
-      inputs: [add_timestamp]
+      inputs: [parse_json]
       condition: '!starts_with!(.kubernetes.container_name, "vector")'
   
   # Sinks - send logs to Victoria Logs
@@ -122,7 +115,7 @@ customConfig:
     victoria_logs:
       type: http
       inputs: [filter_vector_logs]
-      uri: "http://victoria-logs-vminsert:8480/insert/0/loki/api/v1/push"
+      uri: "http://victoria-logs-vminsert.observability.svc.cluster.local:8480/insert/0/loki/api/v1/push"
       method: post
       headers:
         Content-Type: "application/json"

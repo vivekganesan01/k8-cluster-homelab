@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: victoria-logs
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/vivekganesan01/k8-cluster-homelab.git
+    targetRevision: HEAD
+    path: observability/k8s-log-shipper/victoriaLogs
+    directory:
+      recurse: true
+      include:
+        - '*.yml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
