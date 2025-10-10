@@ -68,15 +68,18 @@ spec:
       - name: vmstorage
         image: victoriametrics/vmstorage:latest
         args:
-          - "-config=/etc/victoriametrics/vmstorage.yaml"
+          - "-storageDataPath=/victoria-logs-data"
+          - "-retentionPeriod=30d"
+          - "-loggerLevel=INFO"
+          - "-memory.allowedPercent=80"
         ports:
-        - containerPort: 8400
-          name: tcp
+          - containerPort: 8400
+            name: tcp
         volumeMounts:
-        - name: config
-          mountPath: /etc/victoriametrics
-        - name: data
-          mountPath: /victoria-logs-data
+          - name: data
+            mountPath: /victoria-logs-data
+          - name: data
+            mountPath: /victoria-logs-data
         resources:
           requests:
             memory: "256Mi"
