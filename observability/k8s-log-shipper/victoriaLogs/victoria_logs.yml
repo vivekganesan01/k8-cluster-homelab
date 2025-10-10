@@ -8,55 +8,103 @@ metadata:
   namespace: observability
 data:
   vminsert.yaml: |
-    # Victoria Logs VMInsert configuration
     server:
       http:
         listenAddr: ":8480"
       grpc:
         listenAddr: ":8401"
-    
-    # Storage configuration
     storageDataPath: /victoria-logs-data
-    
-    # Retention settings
     retentionPeriod: 30d
-    
-    # Memory settings
     memory:
       allowedPercent: 80
-    
-    # Logging
     loggerLevel: INFO
-    
-    # Clustering (for single node, keep simple)
     clusterMembersCount: 1
-    
-    # HTTP settings
     http:
-      maxRequestBodySize: 10485760  # 10MB
+      maxRequestBodySize: 10485760
       maxConcurrentRequests: 1000
 
   vmselect.yaml: |
-    # Victoria Logs VMSelect configuration
     server:
       http:
         listenAddr: ":8481"
-    
-    # Storage configuration
     storageDataPath: /victoria-logs-data
-    
-    # Memory settings
     memory:
       allowedPercent: 80
-    
-    # Logging
     loggerLevel: INFO
-    
-    # Cache settings
     search:
       maxQueryLen: 16384
       maxConcurrentRequests: 10
-      maxMemoryPerQuery: 1073741824  # 1GB
+      maxMemoryPerQuery: 1073741824
+
+  vmstorage.yaml: |
+    server:
+      http:
+        listenAddr: ":8400"
+    storageDataPath: /victoria-logs-data
+    retentionPeriod: 30d
+    memory:
+      allowedPercent: 80
+    loggerLevel: INFO
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victoria-logs-vmstorage
+  namespace: observability
+  labels:
+    app: victoria-logs-vmstorage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: victoria-logs-vmstorage
+  template:
+    metadata:
+      labels:
+        app: victoria-logs-vmstorage
+    spec:
+      containers:
+      - name: vmstorage
+        image: victoriametrics/vmstorage:latest
+        args:
+          - "-config=/etc/victoriametrics/vmstorage.yaml"
+        ports:
+        - containerPort: 8400
+          name: tcp
+        volumeMounts:
+        - name: config
+          mountPath: /etc/victoriametrics
+        - name: data
+          mountPath: /victoria-logs-data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: config
+        configMap:
+          name: victoria-logs-config
+      - name: data
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: victoria-logs-vmstorage
+  namespace: observability
+spec:
+  selector:
+    app: victoria-logs-vmstorage
+  ports:
+  - port: 8400
+    targetPort: 8400
+    name: tcp
+  type: ClusterIP
 
 ---
 apiVersion: apps/v1
@@ -79,6 +127,9 @@ spec:
       containers:
       - name: vminsert
         image: victoriametrics/vminsert:latest
+        args:
+          - "-config=/etc/victoriametrics/vminsert.yaml"
+          - "-storageNode=victoria-logs-vmstorage.observability.svc.cluster.local:8400"
         ports:
         - containerPort: 8480
           name: http
@@ -142,6 +193,9 @@ spec:
       containers:
       - name: vmselect
         image: victoriametrics/vmselect:latest
+        args:
+          - "-config=/etc/victoriametrics/vmselect.yaml"
+          - "-storageNode=victoria-logs-vmstorage.observability.svc.cluster.local:8400"
         ports:
         - containerPort: 8481
           name: http

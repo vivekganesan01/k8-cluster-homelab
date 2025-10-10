@@ -13,12 +13,6 @@ spec:
     sans:
     - 192.168.0.2
     - 10.244.62.192
-    - 2a02:8109:8b0a:3900::d5
-    - 2a02:8109:8b0a:3900:867b:ebff:fecf:23e8
-    - fe80::867b:ebff:fecf:23e8
-    - fe80::867b:ebff:fed0:9acd
-    - fe80::64af:eff:fe7b:1845
-    - fe80::ecee:eeff:feee:eeee
   controllerManager: {}
   extensions:
     helm:
