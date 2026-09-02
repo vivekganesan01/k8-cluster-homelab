@@ -1,3 +1,5 @@
+[abandoned][https://github.com/argoproj-labs/argocd-autopilot/issues/689]
+
 #!/usr/bin/env bash
 # Installs the newest Argo CD Autopilot CLI and bootstraps the active Kubernetes context.
 #

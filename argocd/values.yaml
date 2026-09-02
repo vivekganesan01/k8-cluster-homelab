@@ -1,0 +1,32 @@
+# Helm values for argo-helm/argo-cd.
+# Minimal, safe defaults for a homelab single-cluster install.
+# Adjust ingress/host once DNS/ingress-nginx is decided.
+
+global:
+  domain: argocd.homelab.local # not resolvable yet; using port-forward until ingress is wired up
+
+configs:
+  params:
+    server.insecure: false # keep TLS on server pod; terminate TLS at ingress later if added
+
+server:
+  service:
+    type: LoadBalancer # MetalLB (homelab-pool, 192.168.0.220-229, L2) hands out an IP
+    annotations:
+      metallb.universe.tf/loadBalancerIPs: "192.168.0.221" # pin so it's stable; drop this line to let MetalLB auto-assign instead
+
+  ingress:
+    enabled: false # flip to true + set global.domain once ingress-nginx/cert routing exists
+
+# Single-node homelab cluster: no need for HA controllers/redis-ha.
+redis-ha:
+  enabled: false
+
+controller:
+  replicas: 1
+
+repoServer:
+  replicas: 1
+
+applicationSet:
+  replicas: 1
