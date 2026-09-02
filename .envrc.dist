@@ -1,0 +1,2 @@
+export GIT_REPO="https://github.com/.../homelab.git"
+export GIT_TOKEN=""
